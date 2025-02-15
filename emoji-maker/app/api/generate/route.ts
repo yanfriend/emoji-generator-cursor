@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
       throw new Error('No image data received from Replicate')
     }
 
-    const [_, imageData] = entries[0]
+    const [, imageData] = entries[0]
     console.log('🖼️ Image URL received:', imageData)
 
     // Fetch the image data as a blob

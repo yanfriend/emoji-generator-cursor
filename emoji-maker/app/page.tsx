@@ -19,8 +19,8 @@ interface Emoji {
 export default function Home() {
   const { isSignedIn, user } = useUser()
   const [emojis, setEmojis] = useState<Emoji[]>([])
-  const [isLoading, setIsLoading] = useState(false)
   const [isClient, setIsClient] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   // Set isClient to true when component mounts
   useEffect(() => {
@@ -61,6 +61,7 @@ export default function Home() {
   }, [isClient, user])
 
   const handleSubmit = async (prompt: string) => {
+    if (isLoading) return; // Prevent multiple submissions
     setIsLoading(true)
     const placeholderId = Date.now().toString()
     
