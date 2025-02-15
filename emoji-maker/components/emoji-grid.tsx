@@ -13,6 +13,7 @@ interface Emoji {
   prompt: string
   blob?: Blob
   isLiked: boolean
+  image_url: string
 }
 
 interface EmojiGridProps {
@@ -78,7 +79,7 @@ export function EmojiGrid({ emojis, onLike, onDownload }: EmojiGridProps) {
                   />
                 </Button>
                 <span className="text-white text-xs font-medium">
-                  {emoji.likes}
+                  {emoji.likes ?? 0}
                 </span>
               </div>
 

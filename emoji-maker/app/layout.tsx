@@ -25,13 +25,20 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en" data-gramm="false" data-gramm_editor="false" data-enable-grammarly="false">
+      <html 
+        lang="en" 
+        suppressHydrationWarning
+        data-gramm="false" 
+        data-gramm_editor="false" 
+        data-enable-grammarly="false"
+      >
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          suppressHydrationWarning
         >
           <div className="w-full flex justify-end p-4">
             <SignedOut>
-              <SignInButton mode="modal" redirectUrl="/">
+              <SignInButton mode="modal" afterSignInUrl="/">
                 <button className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
                   Sign In
                 </button>

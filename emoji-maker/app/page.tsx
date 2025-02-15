@@ -3,7 +3,8 @@
 import { useUser } from '@clerk/nextjs'
 import { EmojiForm } from '@/components/emoji-form'
 import { EmojiGrid } from '@/components/emoji-grid'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
 
 interface Emoji {
   id: string
@@ -12,12 +13,47 @@ interface Emoji {
   prompt: string
   blob?: Blob
   isLiked: boolean
+  image_url: string  // Add this for Supabase stored URL
 }
 
 export default function Home() {
   const { isSignedIn, user } = useUser()
   const [emojis, setEmojis] = useState<Emoji[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+
+  // Set isClient to true when component mounts
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Fetch emojis on component mount
+  useEffect(() => {
+    async function fetchEmojis() {
+      const { data, error } = await supabase
+        .from('emojis')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error fetching emojis:', error)
+        return
+      }
+
+      if (data) {
+        setEmojis(data.map(emoji => ({
+          ...emoji,
+          url: emoji.image_url,
+          isLiked: false,
+          likes: emoji.likes_count || 0  // Ensure likes is a number
+        })))
+      }
+    }
+
+    if (isClient) {
+      fetchEmojis()
+    }
+  }, [isClient])
 
   const handleSubmit = async (prompt: string) => {
     setIsLoading(true)
@@ -30,12 +66,11 @@ export default function Home() {
       likes: 0,
       prompt,
       isLiked: false,
-      blob: undefined
+      blob: undefined,
+      image_url: ''
     }, ...prev])
 
     try {
-      console.log('🚀 Making request to /api/generate with prompt:', prompt)
-
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: {
@@ -118,6 +153,9 @@ export default function Home() {
       })
     }
   }, [emojis])
+
+  // Only render content on client
+  if (!isClient) return null
 
   return (
     <div className="min-h-screen p-8">
