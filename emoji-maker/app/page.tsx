@@ -2,13 +2,15 @@
 
 import { EmojiForm } from '@/components/emoji-form'
 import { EmojiGrid } from '@/components/emoji-grid'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 interface Emoji {
   id: string
   url: string | null
   likes: number
   prompt: string
+  blob?: Blob
+  isLiked: boolean
 }
 
 export default function Home() {
@@ -25,6 +27,8 @@ export default function Home() {
       url: null,
       likes: 0,
       prompt,
+      isLiked: false,
+      blob: undefined
     }, ...prev])
 
     try {
@@ -52,7 +56,7 @@ export default function Home() {
       // Update the placeholder with the real emoji URL
       setEmojis(prev => prev.map(emoji => 
         emoji.id === placeholderId 
-          ? { ...emoji, url }
+          ? { ...emoji, url, blob: imageBlob }
           : emoji
       ))
 
@@ -66,33 +70,41 @@ export default function Home() {
   }
 
   const handleLike = async (id: string) => {
-    // TODO: Implement like functionality with database
     setEmojis(prev =>
       prev.map(emoji =>
-        emoji.id === id ? { ...emoji, likes: emoji.likes + 1 } : emoji
+        emoji.id === id 
+          ? { 
+              ...emoji, 
+              isLiked: !emoji.isLiked,
+              likes: emoji.isLiked ? emoji.likes - 1 : emoji.likes + 1 
+            }
+          : emoji
       )
     )
   }
 
-  const handleDownload = async (url: string, prompt: string) => {
+  const handleDownload = async (url: string, prompt: string, emoji: Emoji) => {
     try {
-      const response = await fetch(url)
-      const blob = await response.blob()
+      // Use the stored blob if available
+      const blob = emoji.blob || await (await fetch(url)).blob()
       const downloadUrl = window.URL.createObjectURL(blob)
+      
       const link = document.createElement('a')
       link.href = downloadUrl
       link.download = `emoji-${prompt.replace(/\s+/g, '-')}.png`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
+      
+      // Clean up the temporary download URL
       window.URL.revokeObjectURL(downloadUrl)
     } catch (error) {
       console.error('Failed to download emoji:', error)
-      // TODO: Add proper error handling/notification
+      alert('Failed to download emoji')
     }
   }
 
-  // Add cleanup for blob URLs
+  // Cleanup URLs when component unmounts
   useEffect(() => {
     return () => {
       emojis.forEach(emoji => {
@@ -120,7 +132,7 @@ export default function Home() {
         <EmojiGrid 
           emojis={emojis}
           onLike={handleLike}
-          onDownload={handleDownload}
+          onDownload={(url, prompt, emoji) => handleDownload(url, prompt, emoji)}
         />
       </main>
     </div>

@@ -4,18 +4,21 @@ import Image from 'next/image'
 import { Download, Heart, ImageIcon } from 'lucide-react'
 import { Button } from './ui/button'
 import { Loader2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface Emoji {
   id: string
   url: string | null
   likes: number
   prompt: string
+  blob?: Blob
+  isLiked: boolean
 }
 
 interface EmojiGridProps {
   emojis: Emoji[]
   onLike: (id: string) => Promise<void>
-  onDownload: (url: string, prompt: string) => Promise<void>
+  onDownload: (url: string, prompt: string, emoji: Emoji) => Promise<void>
 }
 
 export function EmojiGrid({ emojis, onLike, onDownload }: EmojiGridProps) {
@@ -57,19 +60,33 @@ export function EmojiGrid({ emojis, onLike, onDownload }: EmojiGridProps) {
             </div>
             
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => onLike(emoji.id)}
-                className="text-white hover:text-white hover:bg-white/20"
-              >
-                <Heart className="h-5 w-5" />
-              </Button>
+              <div className="flex flex-col items-center gap-1">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => onLike(emoji.id)}
+                  className={cn(
+                    "text-white hover:text-white hover:bg-white/20",
+                    emoji.isLiked && "text-red-500 hover:text-red-500"
+                  )}
+                >
+                  <Heart 
+                    className={cn(
+                      "h-5 w-5 transition-all",
+                      emoji.isLiked && "fill-current scale-110"
+                    )} 
+                  />
+                </Button>
+                <span className="text-white text-xs font-medium">
+                  {emoji.likes}
+                </span>
+              </div>
+
               {emoji.url && (
                 <Button
                   size="icon"
                   variant="ghost"
-                  onClick={() => onDownload(emoji.url, emoji.prompt)}
+                  onClick={() => onDownload(emoji.url, emoji.prompt, emoji)}
                   className="text-white hover:text-white hover:bg-white/20"
                 >
                   <Download className="h-5 w-5" />
