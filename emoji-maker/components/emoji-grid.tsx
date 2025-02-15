@@ -18,7 +18,7 @@ interface Emoji {
 interface EmojiGridProps {
   emojis: Emoji[]
   onLike: (id: string) => Promise<void>
-  onDownload: (url: string, prompt: string, emoji: Emoji) => Promise<void>
+  onDownload: (url: string | null, prompt: string, emoji: Emoji) => Promise<void>
 }
 
 export function EmojiGrid({ emojis, onLike, onDownload }: EmojiGridProps) {
@@ -86,7 +86,7 @@ export function EmojiGrid({ emojis, onLike, onDownload }: EmojiGridProps) {
                 <Button
                   size="icon"
                   variant="ghost"
-                  onClick={() => onDownload(emoji.url, emoji.prompt, emoji)}
+                  onClick={() => emoji.url && onDownload(emoji.url, emoji.prompt, emoji)}
                   className="text-white hover:text-white hover:bg-white/20"
                 >
                   <Download className="h-5 w-5" />

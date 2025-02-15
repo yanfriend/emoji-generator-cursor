@@ -1,5 +1,6 @@
 'use client'
 
+import { useUser } from '@clerk/nextjs'
 import { EmojiForm } from '@/components/emoji-form'
 import { EmojiGrid } from '@/components/emoji-grid'
 import { useState, useEffect, useRef } from 'react'
@@ -14,6 +15,7 @@ interface Emoji {
 }
 
 export default function Home() {
+  const { isSignedIn, user } = useUser()
   const [emojis, setEmojis] = useState<Emoji[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
@@ -83,7 +85,9 @@ export default function Home() {
     )
   }
 
-  const handleDownload = async (url: string, prompt: string, emoji: Emoji) => {
+  const handleDownload = async (url: string | null, prompt: string, emoji: Emoji) => {
+    if (!url) return;
+    
     try {
       // Use the stored blob if available
       const blob = emoji.blob || await (await fetch(url)).blob()
@@ -125,15 +129,25 @@ export default function Home() {
           </p>
         </div>
         
-        <div className="flex justify-center">
-          <EmojiForm onSubmit={handleSubmit} />
-        </div>
+        {isSignedIn ? (
+          <>
+            <div className="flex justify-center">
+              <EmojiForm onSubmit={handleSubmit} />
+            </div>
 
-        <EmojiGrid 
-          emojis={emojis}
-          onLike={handleLike}
-          onDownload={(url, prompt, emoji) => handleDownload(url, prompt, emoji)}
-        />
+            <EmojiGrid 
+              emojis={emojis}
+              onLike={handleLike}
+              onDownload={handleDownload}
+            />
+          </>
+        ) : (
+          <div className="text-center py-10">
+            <p className="text-muted-foreground">
+              Please sign in to generate and manage emojis.
+            </p>
+          </div>
+        )}
       </main>
     </div>
   )

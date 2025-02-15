@@ -1,3 +1,4 @@
+import { getAuth } from "@clerk/nextjs/server";
 import { NextResponse } from 'next/server'
 import Replicate from 'replicate'
 
@@ -6,6 +7,15 @@ const replicate = new Replicate({
 })
 
 export async function POST(req: Request) {
+  // Check authentication
+  const { userId } = getAuth(req)
+  if (!userId) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    )
+  }
+
   console.log('🎯 POST /api/generate endpoint hit')
 
   if (!process.env.REPLICATE_API_TOKEN) {
