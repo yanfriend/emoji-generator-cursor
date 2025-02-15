@@ -38,7 +38,7 @@ export default function RootLayout({
         >
           <div className="w-full flex justify-end p-4">
             <SignedOut>
-              <SignInButton mode="modal" afterSignInUrl="/">
+              <SignInButton mode="modal">
                 <button className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
                   Sign In
                 </button>
