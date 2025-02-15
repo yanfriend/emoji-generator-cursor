@@ -107,17 +107,52 @@ export default function Home() {
   }
 
   const handleLike = async (id: string) => {
-    setEmojis(prev =>
-      prev.map(emoji =>
-        emoji.id === id 
-          ? { 
-              ...emoji, 
-              isLiked: !emoji.isLiked,
-              likes: emoji.isLiked ? emoji.likes - 1 : emoji.likes + 1 
-            }
-          : emoji
+    try {
+      // Optimistically update the UI
+      setEmojis(prev =>
+        prev.map(emoji =>
+          emoji.id === id 
+            ? { 
+                ...emoji, 
+                isLiked: !emoji.isLiked,
+                likes: emoji.isLiked ? emoji.likes - 1 : emoji.likes + 1 
+              }
+            : emoji
+        )
       )
-    )
+
+      // Update the database
+      const response = await fetch('/api/emojis/like', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          emojiId: id,
+          isLiked: emojis.find(e => e.id === id)?.isLiked || false
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update like')
+      }
+
+    } catch (error) {
+      console.error('Failed to update like:', error)
+      // Revert the optimistic update on error
+      setEmojis(prev =>
+        prev.map(emoji =>
+          emoji.id === id 
+            ? { 
+                ...emoji, 
+                isLiked: !emoji.isLiked,
+                likes: emoji.isLiked ? emoji.likes - 1 : emoji.likes + 1 
+              }
+            : emoji
+        )
+      )
+      alert('Failed to update like')
+    }
   }
 
   const handleDownload = async (url: string | null, prompt: string, emoji: Emoji) => {
