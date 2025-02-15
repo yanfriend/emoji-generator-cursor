@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const { emojiId, isLiked } = await req.json()
-    console.log('Processing like:', { emojiId, isLiked })
+    console.log('Processing like:', { emojiId, isLiked, userId })
 
     // Get current likes count
     const { data: currentEmoji } = await supabase
@@ -26,14 +26,32 @@ export async function POST(req: NextRequest) {
     const newLikes = isLiked ? Math.max(currentLikes - 1, 0) : currentLikes + 1
 
     // Update likes count
-    const { error } = await supabase
+    const { error: updateError } = await supabase
       .from('emojis')
       .update({ likes_count: newLikes })
       .eq('id', emojiId)
 
-    if (error) {
-      console.error('Database error:', error)
-      throw error
+    if (updateError) {
+      console.error('Update error:', updateError)
+      throw updateError
+    }
+
+    // Then handle the like record
+    if (isLiked) {
+      // Remove like
+      await supabase
+        .from('emoji_likes')
+        .delete()
+        .eq('emoji_id', emojiId)
+        .eq('user_id', userId)
+    } else {
+      // Add like
+      await supabase
+        .from('emoji_likes')
+        .upsert([{ 
+          emoji_id: emojiId, 
+          user_id: userId 
+        }])
     }
 
     return NextResponse.json({ success: true, likes: newLikes })

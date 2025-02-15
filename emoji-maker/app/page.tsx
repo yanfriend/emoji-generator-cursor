@@ -30,30 +30,35 @@ export default function Home() {
   // Fetch emojis on component mount
   useEffect(() => {
     async function fetchEmojis() {
-      const { data, error } = await supabase
+      const { data: emojisData, error: emojisError } = await supabase
         .from('emojis')
-        .select('*')
+        .select(`
+          *,
+          emoji_likes (
+            user_id
+          )
+        `)
         .order('created_at', { ascending: false })
 
-      if (error) {
-        console.error('Error fetching emojis:', error)
+      if (emojisError) {
+        console.error('Error fetching emojis:', emojisError)
         return
       }
 
-      if (data) {
-        setEmojis(data.map(emoji => ({
+      if (emojisData) {
+        setEmojis(emojisData.map(emoji => ({
           ...emoji,
           url: emoji.image_url,
-          isLiked: false,
-          likes: emoji.likes_count || 0  // Ensure likes is a number
+          isLiked: (emoji.emoji_likes || []).some((like: { user_id: string }) => like.user_id === user?.id),
+          likes: emoji.likes_count || 0
         })))
       }
     }
 
-    if (isClient) {
+    if (isClient && user) {
       fetchEmojis()
     }
-  }, [isClient])
+  }, [isClient, user])
 
   const handleSubmit = async (prompt: string) => {
     setIsLoading(true)
